@@ -1,0 +1,325 @@
+////
+NO CAMBIAR!!
+Codificación, idioma, tabla de contenidos, tipo de documento
+////
+:encoding: utf-8
+:lang: es
+:toc: right
+:toc-title: Tabla de contenidos
+:doctype: book
+:imagesdir: ./images
+
+
+
+
+////
+Nombre y título del trabajo
+////
+# Desarrollo de una aplicacion Ionic para la reproducción de sonidos
+Desarrollo de Aplicaciones Híbridas
+Msáter TAII - UAL
+
+// NO CAMBIAR!! (Entrar en modo no numerado de apartados)
+:numbered!: 
+
+
+[abstract]
+## Resumen
+
+Veremos el desarrollo de una aplicación sencilla Ionic para la reproducción de sonidos.
+
+.Objetivos
+
+* Creación de proyectos en blanco.
+* Reproducir sonidos
+* Uso de componentes como el ion-list y ion-items
+* Usar directivas de Angular
+* Evento click/tap
+* Hacer 'pull' para refrescar nuestra app
+* Deslizar para eliminar
+* Cambiar el orden de los elementos de una lista
+* Uso de elementos estáticos para nuestra app
+
+
+// Entrar en modo numerado de apartados
+:numbered:
+
+## Preview de aplicaciones en nuestro móvil mediante `Ionic View` e `Ionic Pro`
+
+1. Descargar la app `Ionic View` desde el market de nuestro móvil.
+1. Crear cuenta gratuita en Ionic Pro
+1. Subir nuestra clave SSH pública a Ionic Pro
+1. Iniciar sesión en Ionic Pro desde la consola con `ionic login`. Ignorar por ahora las opciones acerca del modo de conexión
+1. Crear un proyecto Ionic con `ionic start mistabs tabs`
+1. Configurar en modo _Pro_ con `sudo ionic config set -g backend pro`
+1. Desde la carpeta del proyecto (`cd mistabs`) vincular el proyecto local con Ionic Pro mediante ` ionic link --create`. Esto nos preguntará sobre un nombre para la app (`mistabs`), un lugar donde alojar el repo (`Ionic Framework`) y el modo de conexión. Esto generará un `app_id` que será almacenado en el archivo `ionic.config.json`. Este comando también ha creado un remoto git denominado `ionic`, que será el que usemos en las operaciones `push`.
+1. Al hacer un `add-commit-push` en la carpeta del proyecto `mistabs` ya está en Ionic Pro (`git push ionic master`)
+1. Desde Ionic Pro, en la aplicación hacer `Deploy`. Tras unos instantes, la app estará disponible en la App `Ionic View` de nuestro móvil
+
+## Quiz
+
+1. Ionic es un framework o marco de trabajo que brinda estilos, guías, elementos y comandos para crear aplicaciones para dispositivos móviles.
+
+1. Para desarrollar aplicaciones para android utilizando ionic, ¿es necesario tener licencia de desarrollador de Google?
+
+1. ¿Ionic ofrece plantillas pre fabricadas para poder iniciar rápidamente el desarrollo de una app?
+
+1. ¿Con qué comando iniciamos un servidor local, con detección automática de cambios y depuración de errores?
+
+1. ionic view, es útil para probar rápidamente las aplicaciones en el dispositivo pero:
+
+1. En un proyecto de ionic 2, la carpeta "src" es:
+
+1. ¿Cuál es el url por defecto para poder revisar IOS, Android y Windows Phone al mismo tiempo, después de ejecutar el ionic serve ?
+
+1. ¿Para trabajar en ionic 2, es necesario pagar una suscripción mensual?
+
+1. Para realizar despliegues de las aplicaciones en Google Play Store o Apple App Store, ¿Es necesario una licencia de desarrollador de sus respectivas tiendas?
+
+1. ¿Cuál es el costo de las licencias de Apple y Google developer?
+Importante: Google son 25 dólares de por vida, IOS son 100 dólares anuales.
+
+## Desarrollo del reproductor de sonidos
+
+### Objetivos
+
+* Creación de proyectos en blanco.
+* Reproducir sonidos
+* Uso de componentes como el ion-list y ion-items
+* Usar directivas de Angular
+* Evento click/tap
+* Hacer 'pull' para refrescar nuestra app
+* Deslizar para eliminar
+* Cambiar el orden de los elementos de una lista
+* Uso de elementos estáticos para nuestra app
+
+[source]
+----
+ionic start sonidos blank
+ionic serve
+----
+
+En `home.html`
+
+1. Poner título a Sonidos y añadir a <ion-navbar class="primary">
+1. Borrar el contenido de <ion-content> y quitarle el padding
+1. Descargar link:files/materialAppSonidos.zip[este archivo con el material multimedia de la app]
+1. Copiar las carpetas animales y sonidos a src/assets
+1. Crear una carpeta src/data. Copiar en ella el archivo data.animales.ts
+
+### Creación de la lista
+
+En `home.html` vamos a crear un primer elemento de la lista para el caballo
+
+[source]
+----
+<ion-list>
+  <ion-item>
+    <ion-avatar item-left>
+      <img src="assets/animales/caballo.png">
+    </ion-avatar>
+    <h2>Caballo</h2>
+  </ion-item>
+</ion-list>
+----
+
+Pero, no vamos a crear manualmente uno para cada uno. Necesitamos aprender a crear una lista mediante un bucle.
+
+En `home.ts` 
+
+1. Importamos la lista de animales `import {ANIMALES} from '../../data/data.animales'`
+1. Definimos una variable de instancia `animales: Animal[] = []`
+1. En el constructor creamos una copia de ANIMALES `this.animales = ANIMALES.slice(0);`
+1. Creación de una interfaz para los animales 
+
++
+.`src/interfaces/animal.interface.ts`
+[source]
+----
+export interface Animal {
+    nombre: string;
+    imagen: string;
+    audio: string;
+    duracion: number;
+    reproduciendo: boolean;
+}
+----
+
+Para iterar sobre los animales de `home.ts`, modificamos `home.html` e iteramos sobre la lista con la directiva `*ngFor` y mostramos la imagen del animal y su nombre. También añadiremos comenzaremos a incorporar la funcioalidad de `click` indicando un método `reproducir` al que le pasaremos el animal seleccionado como parámetro.
+
+[source]
+----
+<ion-content>
+  <ion-item *ngFor="let animal of animales" (click)="reproducir(animal)">
+    <ion-avatar item-start>
+      <img src="{{ animal.imagen }}">
+    </ion-avatar>
+    <h2>{{ animal.nombre }}</h2>
+  </ion-item>
+</ion-content>
+----
+
+### Reproducción de sonidos
+
+El método `reproducir` se implementa en `home.ts`. Por ahora, la única funcionalidad del método `reproducir()` será mostrar el nombre del animal por la consola.
+
+[source]
+----
+ reproducir (animal: Animal) {
+    console.log(animal);
+  } 
+----
+
+Ahora, se mostrará la lista de animales, y al hacer clic sobre ellos, apacerá el objeto selccionado en la consola del navegador.
+
+La reproducción de sonidos la haremos con lo que nos aporta HTML 5
+
+[source]
+----
+ reproducir (animal: Animal) {
+    console.log(animal);
+
+    let audio = new Audio();
+
+    audio.src = animal.audio;
+    animal.reproduciendo = true;
+    audio.load();
+    audio.play();
+
+    setTimeout(() => {
+      animal.reproduciendo = false;
+    }, animal.duracion * 1000);
+  }
+
+----
+
+Para añadir la función de play y pause con botones, actualizaremos el `home.html` usando `*ngIf` para mostrar un botón u otro en función de si se está reproduciendo o no.
+
+[source]
+----
+<ion-content>
+  <ion-item *ngFor="let animal of animales" (click)="reproducir(animal)">
+    <ion-avatar item-start>
+      <img src="{{ animal.imagen }}">
+    </ion-avatar>
+    <h2>{{ animal.nombre }}</h2>
+    <ion-icon *ngIf="animal.reproduciendo" name="pause" item-end></ion-icon>
+    <ion-icon *ngIf="!animal.reproduciendo" name="play" item-end></ion-icon>
+  </ion-item>
+</ion-content>
+----
+
+### Mejora de la aplicación. 
+
+Ahora se pueden reproducir varias veces el mismo audio y audios diferentes simultáneamente. Esto se debe a que cada llamada al método `reproducir` crea su propio audio y controla su propio tiempo. Lo solucionaremos haciendo que el objeto del audio y su tiempo de reproducción sean variables de instancia.
+
+[source]
+----
+export class HomePage {
+  animales: Animal[];
+  audio = new Audio();
+  tiempoAudio: any;
+
+  constructor(public navCtrl: NavController) {
+    this.animales = ANIMALES.slice(0);
+
+  }
+
+ reproducir (animal: Animal) {
+    console.log(animal);
+
+    this.pausarAudio(animal);
+
+    if (animal.reproduciendo) {
+      animal.reproduciendo = false;
+      return;
+    }
+
+    this.audio.src = animal.audio;
+    animal.reproduciendo = true;
+   this.audio.load();
+   this.audio.play();
+
+    this.tiempoAudio = setTimeout(() => {
+      animal.reproduciendo = false;
+    }, animal.duracion * 1000);
+  }
+
+  private pausarAudio( animalSeleccionado: Animal) {
+    clearTimeout(this.tiempoAudio);
+
+    this.audio.pause();
+    this.audio.currentTime = 0;
+
+    for (let animal of this.animales) {
+      if (animal.nombre != animalSeleccionado.nombre) {
+        animal.reproduciendo = false;
+      }
+    }
+  }
+
+}
+----
+
+### Convertir a sliding-list
+
+Metemos `<ion-item>` en   un ` <ion-item-sliding>`. Este elemento está formado por los `<ion-item>` y por `<ion-item-options side="right">`, donde `side` indica dónde quieremos colocar el botón.
+
+Habrá que llevarse el `*ngFor` al `<ion-item-sliding>`. Además le añadiremos un índice que luego será útil para ver qué elemento hemos seleccionado de cara a poder borrarlo.
+
+[source]
+----
+<ion-content>
+<ion-item-sliding *ngFor="let animal of animales; let i = index">
+    <ion-item  (click)="reproducir(animal)">
+      <ion-avatar item-start>
+        <img src="{{ animal.imagen }}">
+      </ion-avatar>
+      <h2>{{ animal.nombre }}</h2>
+      <ion-icon *ngIf="animal.reproduciendo" name="pause" item-end></ion-icon>
+      <ion-icon *ngIf="!animal.reproduciendo" name="play" item-end></ion-icon>
+    </ion-item>
+
+    <ion-item-options side="right">
+      <button ion-button color="danger" (click)="borrar(i)">
+        <ion-icon name="trash"></ion-icon>
+        Borrar
+      </button>
+    </ion-item-options>
+</ion-item-sliding>
+</ion-content>
+----
+
+### Refrescar la página 
+
+Localizar `Refresher` en la sección API de la documentación de Ionic.
+
+Incluir en `home.html` el elemento _refresher_ 
+
+[source]
+----
+<ion-content>
+  <ion-refresher (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content>
+      <ion-item-sliding *ngFor="let animal of animales; let i = index">
+        <ion-item  (click)="reproducir(animal)">
+          <ion-avatar item-start>
+            <img src="{{ animal.imagen }}">
+....
+----
+
+Crear en `home.ts` el método `doRefresh()` 
+
+[source]
+----
+  doRefresh(refresher: any) {
+    console.log("Inicio del refresh");
+    this.animales = ANIMALES;
+
+    setTimeout(() => {
+      console.log('Async operation has ended');
+      refresher.complete();
+    }, 2000);
+  }
+  }
+----
